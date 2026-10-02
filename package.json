@@ -1,14 +1,11 @@
 {
-  "name": "shmc",
+  "name": "student-hall-management-system",
   "version": "1.0.0",
   "description": "Students Hall Management Center",
-  "main": "server.js",
+  "main": "api/index.js",
   "scripts": {
-    "start": "node --no-warnings server.js",
-    "test": "node --no-warnings --test"
+    "start": "node code/server.js"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "express": "^4.22.3",
     "qrcode": "^1.5.4"

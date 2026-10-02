@@ -1,5 +1,5 @@
 // Students Hall Management Center - API server
-const express = require('express'), crypto = require('crypto'), QR = require('qrcode');
+const express = require('express'), crypto = require('crypto'), QR = require('qrcode'), path = require('node:path');
 const db = require('./db'), { rank, allot } = require('./engine'), { sign, verify, checkPw } = require('./gate');
 
 const KEY = process.env.SESSION_KEY || 'shmc-session-key', PASS_KEY = process.env.PASS_KEY || 'shmc-gate-key-2026';
@@ -13,7 +13,7 @@ const FLOW = { OPEN: ['ASSIGNED'], ASSIGNED: ['IN_PROGRESS'], IN_PROGRESS: ['RES
 const app = express(), now = () => new Date().toISOString();
 const one = (s, ...a) => db.prepare(s).get(...a), all = (s, ...a) => db.prepare(s).all(...a);
 const run = (s, ...a) => db.prepare(s).run(...a);
-app.use(express.json()); app.use(express.static(__dirname + '/public'));
+app.use(express.json()); app.use(express.static(path.join(__dirname, 'public')));
 
 // --- auth: HMAC-signed session token + role guard -------------------------
 const auth = (...roles) => (req, res, next) => {
@@ -253,4 +253,7 @@ if (require.main === module) {
   setInterval(() => { slaCheck(); applyFines(); }, 15 * 60e3);
   app.listen(process.env.PORT || 3000, () => console.log('SHMC running on http://localhost:' + (process.env.PORT || 3000)));
 }
-module.exports = { app, FLOW, slaCheck };
+app.app = app;
+app.FLOW = FLOW;
+app.slaCheck = slaCheck;
+module.exports = app;

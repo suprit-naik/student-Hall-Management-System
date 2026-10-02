@@ -1,7 +1,9 @@
 // SQLite schema and demo seed data (Node 22+ built-in sqlite)
 const { DatabaseSync } = require('node:sqlite');
+const path = require('node:path'), os = require('node:os');
 const { hash } = require('./gate');
-const db = new DatabaseSync(process.env.DB || 'shmc.db');
+const dbPath = process.env.DB || (process.env.VERCEL ? path.join(os.tmpdir(), 'shmc.db') : path.join(__dirname, 'shmc.db'));
+const db = new DatabaseSync(dbPath);
 
 db.exec(`PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS hall(hall_id INTEGER PRIMARY KEY, name TEXT, gender TEXT);
