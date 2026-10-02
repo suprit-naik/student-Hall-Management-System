@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: shmc-portal
+    runtime: node
+    plan: free
+    rootDir: code
+    buildCommand: npm install
+    startCommand: node --no-warnings server.js
+    envVars:
+      - key: NODE_VERSION
+        value: 22.14.0
+      - key: PORT
+        value: 3000
