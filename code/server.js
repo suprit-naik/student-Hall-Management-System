@@ -13,6 +13,14 @@ const FLOW = { OPEN: ['ASSIGNED'], ASSIGNED: ['IN_PROGRESS'], IN_PROGRESS: ['RES
 const app = express(), now = () => new Date().toISOString();
 const one = (s, ...a) => db.prepare(s).get(...a), all = (s, ...a) => db.prepare(s).all(...a);
 const run = (s, ...a) => db.prepare(s).run(...a);
+app.use((req, res, next) => {
+  const matched = req.headers['x-matched-path'] || req.headers['x-vercel-matched-path'];
+  if (matched) {
+    const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    req.url = matched + q;
+  }
+  next();
+});
 app.use(express.json()); app.use(express.static(path.join(__dirname, 'public')));
 
 // --- auth: HMAC-signed session token + role guard -------------------------
