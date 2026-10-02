@@ -14,10 +14,17 @@ const app = express(), now = () => new Date().toISOString();
 const one = (s, ...a) => db.prepare(s).get(...a), all = (s, ...a) => db.prepare(s).all(...a);
 const run = (s, ...a) => db.prepare(s).run(...a);
 app.use((req, res, next) => {
-  const matched = req.headers['x-matched-path'] || req.headers['x-vercel-matched-path'];
-  if (matched) {
-    const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
-    req.url = matched + q;
+  if (req.query && req.query._path) {
+    const p = req.query._path.startsWith('/') ? req.query._path : '/' + req.query._path;
+    delete req.query._path;
+    const q = new URLSearchParams(req.query).toString();
+    req.url = p + (q ? '?' + q : '');
+  } else {
+    const matched = req.headers['x-matched-path'] || req.headers['x-vercel-matched-path'];
+    if (matched && matched !== req.url) {
+      const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+      req.url = matched + q;
+    }
   }
   next();
 });
