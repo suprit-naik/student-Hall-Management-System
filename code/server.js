@@ -33,7 +33,6 @@ const publicDir = path.join(__dirname, 'public');
 const siteDir = path.join(__dirname, 'site');
 
 // Clean portal routing
-app.get('/portal', (req, res) => res.redirect(302, '/portal/'));
 app.use('/portal', express.static(publicDir));
 app.get('/portal/*', (req, res) => res.sendFile(path.join(publicDir, 'index.html')));
 
