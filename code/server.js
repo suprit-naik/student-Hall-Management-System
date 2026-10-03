@@ -15,24 +15,16 @@ const one = (s, ...a) => db.prepare(s).get(...a), all = (s, ...a) => db.prepare(
 const run = (s, ...a) => db.prepare(s).run(...a);
 // Normalize URL and req.originalUrl for serverless environments (e.g. Vercel)
 app.use((req, res, next) => {
-  let targetPath = null;
+  let u = req.url;
   if (req.query && req.query._path) {
-    targetPath = req.query._path.startsWith('/') ? req.query._path : '/' + req.query._path;
+    u = req.query._path.startsWith('/') ? req.query._path : '/' + req.query._path;
     delete req.query._path;
-  } else if (req.headers['x-matched-path'] || req.headers['x-vercel-matched-path']) {
-    targetPath = req.headers['x-matched-path'] || req.headers['x-vercel-matched-path'];
-  } else if (req.url.startsWith('/server.js')) {
-    targetPath = req.url.replace(/^\/server\.js/, '') || '/';
-  } else if (req.url.startsWith('/api/index.js')) {
-    targetPath = req.url.replace(/^\/api\/index\.js/, '') || '/';
-  }
-
-  if (targetPath) {
-    targetPath = targetPath.replace(/^\/server\.js/, '').replace(/^\/api\/index\.js/, '') || '/';
     const q = new URLSearchParams(req.query).toString();
-    req.url = targetPath + (q ? '?' + q : '');
-    req.originalUrl = req.url;
+    u = u + (q ? '?' + q : '');
   }
+  u = u.replace(/^\/server\.js/, '').replace(/^\/api\/index\.js/, '') || '/';
+  req.url = u;
+  req.originalUrl = u;
   next();
 });
 app.use(express.json());
