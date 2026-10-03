@@ -29,10 +29,18 @@ app.use((req, res, next) => {
 });
 app.use(express.json());
 
-// Explicit clean redirect for /portal -> /portal/
+const publicDir = path.join(__dirname, 'public');
+const siteDir = path.join(__dirname, 'site');
+
+// Clean portal routing
 app.get('/portal', (req, res) => res.redirect(302, '/portal/'));
-app.use('/portal', express.static(path.join(__dirname, 'public'), { redirect: false })); // role-based portal (SPA)
-app.use(express.static(path.join(__dirname, 'site')));                                     // landing page + 3D ID card (static Next.js export)
+app.use('/portal', express.static(publicDir));
+app.get('/portal/*', (req, res) => res.sendFile(path.join(publicDir, 'index.html')));
+
+// 3D ID and landing page routing
+app.get('/id', (req, res) => res.sendFile(path.join(siteDir, 'id', 'index.html')));
+app.get('/id/*', (req, res) => res.sendFile(path.join(siteDir, 'id', 'index.html')));
+app.use(express.static(siteDir));
 
 // --- auth: HMAC-signed session token + role guard -------------------------
 const auth = (...roles) => (req, res, next) => {
