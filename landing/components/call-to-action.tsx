@@ -10,7 +10,7 @@ export default function CallToAction() {
         <div className="text-center">
           <TextEffect triggerOnView preset="fade-in-blur" speedSegment={0.3} as="h2" className="text-balance text-4xl font-semibold lg:text-5xl">Allotment for 2026-27 is open</TextEffect>
           <TextEffect triggerOnView preset="fade-in-blur" speedSegment={0.3} delay={0.3} as="p" className="mt-4 text-muted-foreground">
-            Sign in with your roll number. Demo password for every account: pass123
+            Sign in with your roll number or staff ID to apply, pay and track everything in one place.
           </TextEffect>
           <AnimatedGroup triggerOnView variants={{ container: { visible: { transition: { staggerChildren: 0.05, delayChildren: 0.75 } } }, ...transitionVariants }}
             className="mt-12 flex flex-wrap justify-center gap-4">

@@ -36,7 +36,7 @@ function login() {
   app.innerHTML = `<div class="card login"><img src="cgu.png"><h2 style="text-align:center">Sign in to SHMC</h2>
     <label>Roll number / Staff ID<input id=l value=""></label><label>Password<input id=p type=password></label>
     <button class="b" style="width:100%" id=go>Sign in</button><div id=msg></div>
-    <p class=muted style="font-size:12px">Demo: 2301020456, warden1, accounts, guard1 &middot; password pass123</p></div>`;
+    </div>`;
   $('#go').onclick = async () => { try { S = await api('/login', { login: $('#l').value, password: $('#p').value });
     localStorage.setItem('shmc', JSON.stringify(S));
     const next = new URLSearchParams(location.search).get('next'); next && next.startsWith('/') ? location.href = next : boot(); } catch (e) { err(e); } };
