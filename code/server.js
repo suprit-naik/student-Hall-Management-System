@@ -21,11 +21,14 @@ app.use((req, res, next) => {
     delete req.query._path;
   } else if (req.headers['x-matched-path'] || req.headers['x-vercel-matched-path']) {
     targetPath = req.headers['x-matched-path'] || req.headers['x-vercel-matched-path'];
+  } else if (req.url.startsWith('/server.js')) {
+    targetPath = req.url.replace(/^\/server\.js/, '') || '/';
+  } else if (req.url.startsWith('/api/index.js')) {
+    targetPath = req.url.replace(/^\/api\/index\.js/, '') || '/';
   }
 
   if (targetPath) {
-    // If the path itself has server.js prefix, strip it
-    targetPath = targetPath.replace(/^\/server\.js/, '') || '/';
+    targetPath = targetPath.replace(/^\/server\.js/, '').replace(/^\/api\/index\.js/, '') || '/';
     const q = new URLSearchParams(req.query).toString();
     req.url = targetPath + (q ? '?' + q : '');
     req.originalUrl = req.url;
@@ -35,7 +38,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 // Explicit clean redirect for /portal -> /portal/
-app.get('/portal', (req, res) => res.redirect(301, '/portal/'));
+app.get('/portal', (req, res) => res.redirect(302, '/portal/'));
 app.use('/portal', express.static(path.join(__dirname, 'public'), { redirect: false })); // role-based portal (SPA)
 app.use(express.static(path.join(__dirname, 'site')));                                     // landing page + 3D ID card (static Next.js export)
 
