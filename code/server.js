@@ -13,24 +13,31 @@ const FLOW = { OPEN: ['ASSIGNED'], ASSIGNED: ['IN_PROGRESS'], IN_PROGRESS: ['RES
 const app = express(), now = () => new Date().toISOString();
 const one = (s, ...a) => db.prepare(s).get(...a), all = (s, ...a) => db.prepare(s).all(...a);
 const run = (s, ...a) => db.prepare(s).run(...a);
+// Normalize URL and req.originalUrl for serverless environments (e.g. Vercel)
 app.use((req, res, next) => {
+  let targetPath = null;
   if (req.query && req.query._path) {
-    const p = req.query._path.startsWith('/') ? req.query._path : '/' + req.query._path;
+    targetPath = req.query._path.startsWith('/') ? req.query._path : '/' + req.query._path;
     delete req.query._path;
+  } else if (req.headers['x-matched-path'] || req.headers['x-vercel-matched-path']) {
+    targetPath = req.headers['x-matched-path'] || req.headers['x-vercel-matched-path'];
+  }
+
+  if (targetPath) {
+    // If the path itself has server.js prefix, strip it
+    targetPath = targetPath.replace(/^\/server\.js/, '') || '/';
     const q = new URLSearchParams(req.query).toString();
-    req.url = p + (q ? '?' + q : '');
-  } else {
-    const matched = req.headers['x-matched-path'] || req.headers['x-vercel-matched-path'];
-    if (matched && matched !== req.url) {
-      const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
-      req.url = matched + q;
-    }
+    req.url = targetPath + (q ? '?' + q : '');
+    req.originalUrl = req.url;
   }
   next();
 });
 app.use(express.json());
-app.use('/portal', express.static(path.join(__dirname, 'public')));   // role-based portal (SPA)
-app.use(express.static(path.join(__dirname, 'site')));               // landing page + 3D ID card (static Next.js export)
+
+// Explicit clean redirect for /portal -> /portal/
+app.get('/portal', (req, res) => res.redirect(301, '/portal/'));
+app.use('/portal', express.static(path.join(__dirname, 'public'), { redirect: false })); // role-based portal (SPA)
+app.use(express.static(path.join(__dirname, 'site')));                                     // landing page + 3D ID card (static Next.js export)
 
 // --- auth: HMAC-signed session token + role guard -------------------------
 const auth = (...roles) => (req, res, next) => {
