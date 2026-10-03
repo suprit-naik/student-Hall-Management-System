@@ -38,7 +38,8 @@ function login() {
     <button class="b" style="width:100%" id=go>Sign in</button><div id=msg></div>
     <p class=muted style="font-size:12px">Demo: 2301020456, warden1, accounts, guard1 &middot; password pass123</p></div>`;
   $('#go').onclick = async () => { try { S = await api('/login', { login: $('#l').value, password: $('#p').value });
-    localStorage.setItem('shmc', JSON.stringify(S)); boot(); } catch (e) { err(e); } };
+    localStorage.setItem('shmc', JSON.stringify(S));
+    const next = new URLSearchParams(location.search).get('next'); next && next.startsWith('/') ? location.href = next : boot(); } catch (e) { err(e); } };
 }
 
 // ---------------- student ----------------
@@ -49,6 +50,8 @@ async function home() {
     <div class="card stat"><span class=muted>Application</span><b style="font-size:18px">${m.application ? pill(m.application.status) : 'Not applied'}</b>
       ${m.application ? 'Submitted ' + dt(m.application.submitted_at) : ''}</div>
     <div class="card stat"><span class=muted>Roll number</span><b style="font-size:20px">${m.login}</b>Year ${m.year} &middot; CGPA ${m.cgpa}</div></div>
+    <div class="card idcard"><div><h2>Digital hall ID card</h2><p class=muted>A 3D lanyard card with your name, roll number and room.
+      When a leave is approved, the QR on its back becomes your gate pass.</p></div><a class=b href="/id/">View my 3D ID card</a></div>
     <div class=card><h2>Roommates</h2>${m.roommates.length ? m.roommates.map(r => `<p>${r.name} <span class=muted>(${r.login})</span></p>`).join('')
       : '<p class=muted>No roommates yet.</p>'}</div>`;
 }
@@ -136,17 +139,17 @@ async function qr(id) {
 async function dashboard() {
   const d = await api('/dashboard'), max = Math.max(...d.occupancy.map(o => o.beds));
   const bars = d.occupancy.map((o, i) => { const x = 60 + i * 150, h1 = o.beds / max * 160, h2 = o.occupied / max * 160;
-    return `<rect x=${x} y=${190 - h1} width=44 height=${h1} fill="#e4dfdb"/><rect x=${x + 48} y=${190 - h2} width=44 height=${h2} fill="#be3e24"/>
-      <text x=${x + 46} y=210 text-anchor=middle font-size=12>${o.type}</text><text x=${x + 22} y=${184 - h1} text-anchor=middle font-size=11>${o.beds}</text>
-      <text x=${x + 70} y=${184 - h2} text-anchor=middle font-size=11>${o.occupied}</text>`; }).join('');
+    return `<rect x=${x} y=${190 - h1} width=44 height=${h1} fill="#3f3f46"/><rect x=${x + 48} y=${190 - h2} width=44 height=${h2} fill="#fafafa"/>
+      <text x=${x + 46} y=210 text-anchor=middle font-size=12 fill="#a1a1aa">${o.type}</text><text x=${x + 22} y=${184 - h1} text-anchor=middle font-size=11 fill="#a1a1aa">${o.beds}</text>
+      <text x=${x + 70} y=${184 - h2} text-anchor=middle font-size=11 fill="#fafafa">${o.occupied}</text>`; }).join('');
   const beds = d.occupancy.reduce((s, o) => s + o.beds, 0), occ = d.occupancy.reduce((s, o) => s + o.occupied, 0);
   app.innerHTML = `<div class=grid><div class="card stat"><span class=muted>Occupancy, ${d.hall}</span><b>${occ}/${beds}</b>${Math.round(occ / beds * 100)}% beds filled</div>
     <div class="card stat"><span class=muted>Pending dues</span><b>${rs(d.dues.amt)}</b>${d.dues.n} unpaid invoices</div>
     <div class="card stat"><span class=muted>Collected</span><b>${rs(d.collected)}</b>all halls</div>
     <div class="card stat"><span class=muted>Open complaints</span><b>${d.openComplaints}</b>${d.escalated} escalated &middot; ${d.studentsOut} students out</div></div>
     <div class=grid><div class=card><h2>Beds vs occupied, by room type</h2><svg viewBox="0 0 520 225" width=100%>${bars}
-      <line x1=40 x2=500 y1=190 y2=190 stroke="#999"/><rect x=330 y=8 width=10 height=10 fill="#e4dfdb"/><text x=345 y=17 font-size=11>Beds</text>
-      <rect x=390 y=8 width=10 height=10 fill="#be3e24"/><text x=405 y=17 font-size=11>Occupied</text></svg></div>
+      <line x1=40 x2=500 y1=190 y2=190 stroke="#52525b"/><rect x=330 y=8 width=10 height=10 fill="#3f3f46"/><text x=345 y=17 font-size=11 fill="#a1a1aa">Beds</text>
+      <rect x=390 y=8 width=10 height=10 fill="#fafafa"/><text x=405 y=17 font-size=11 fill="#a1a1aa">Occupied</text></svg></div>
     <div class=card><h2>Room map</h2><div class=rooms>${d.rooms.map(r => `<div class=rm><b>${r.room_no}</b><br><span class=muted>${r.type}</span><br>
       ${Array.from({ length: r.capacity }, (_, i) => `<i class="${i < r.occupied ? 'f' : ''}"></i>`).join('')}</div>`).join('')}</div></div></div>`;
 }

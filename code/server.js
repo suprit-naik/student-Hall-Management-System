@@ -28,7 +28,9 @@ app.use((req, res, next) => {
   }
   next();
 });
-app.use(express.json()); app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
+app.use('/portal', express.static(path.join(__dirname, 'public')));   // role-based portal (SPA)
+app.use(express.static(path.join(__dirname, 'site')));               // landing page + 3D ID card (static Next.js export)
 
 // --- auth: HMAC-signed session token + role guard -------------------------
 const auth = (...roles) => (req, res, next) => {
@@ -174,8 +176,8 @@ app.get('/receipt/:id', auth('student', 'accountant'), (req, res) => {
   const r = one(`SELECT p.*, i.head, u.name, u.login FROM payment p JOIN invoice i USING(invoice_id)
     JOIN user u ON u.user_id=i.student_id WHERE pay_id=?`, req.params.id);
   if (!r || (req.user.role === 'student' && r.login !== req.user.login)) return res.status(404).send('Not found');
-  res.send(`<!doctype html><link rel=stylesheet href=/style.css><div class="receipt card">
-    <img src=/cgu.png width=64><h2>Fee Receipt</h2><p class=muted>Students Hall Management Center, C. V. Raman Global University</p>
+  res.send(`<!doctype html><link rel=stylesheet href=/portal/style.css><div class="receipt card">
+    <img src=/portal/cgu.png width=64><h2>Fee Receipt</h2><p class=muted>Students Hall Management Center, C. V. Raman Global University</p>
     <table><tr><td>Receipt no.</td><td><b>SHMC-${String(r.pay_id).padStart(5, '0')}</b></td></tr>
     <tr><td>Student</td><td>${r.name} (${r.login})</td></tr><tr><td>Fee head</td><td>${r.head}</td></tr>
     <tr><td>Amount</td><td><b>Rs. ${r.amount.toLocaleString('en-IN')}</b></td></tr><tr><td>Mode</td><td>${r.mode}</td></tr>

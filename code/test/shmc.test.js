@@ -64,7 +64,7 @@ test('API: login, role guard and allotment end to end', async () => {
     assert.equal((await call('/allotment/run', {}, s)).status, 403);
     assert.equal((await call('/applications', { prefs: ['DOUBLE'], survey: [2, 4, 4, 3, 2] }, s)).status, 201);
     const pub = await call('/allotment/publish', {}, w);
-    assert.equal(pub.body.allotted, 9); assert.equal(pub.body.waitlisted, 2);
+    assert.equal(pub.body.allotted, 16); assert.equal(pub.body.waitlisted, 5);   // 21 applicants, 16 free beds in Aryabhatta Hall
     const me = (await call('/me', null, s)).body;
     assert.ok(me.room, 'student has a room after publish');
     const inv = (await call('/invoices', null, s)).body;

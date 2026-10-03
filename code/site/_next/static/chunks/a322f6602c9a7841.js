@@ -1,0 +1,1 @@
+(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,65501,e=>{e.v("/_next/static/media/lanyard.d84d7344.png")},16354,e=>{e.v(e=>Promise.resolve().then(()=>e(66246)))}]);

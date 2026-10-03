@@ -1,36 +1,42 @@
 # Students Hall Management Center (SHMC)
 
-Automated Hostel Management and Room Allotment System for C. V. Raman Global University.
+Hostel room allotment and hall administration for C. V. Raman Global University, Bhubaneswar.
+Software Engineering case study by Sk Mustakim Ali, Suprit Kumar Naik and Sweta Samantaray (guide: Sibun Nath).
 
-## Features
-- **Deterministic Merit & Preference-Based Allotment**: 50/30/20 weighted criteria (CGPA, Distance, Seniority) with automated roommate compatibility scoring (Cosine similarity).
-- **Automated Fine & Surcharge Invoicing**: Midnight cron jobs for fee deadlines and automated dues tracking.
-- **SLA-Tracked Ticket Escalation**: 3-level complaint tracking with automated escalation based on service SLA deadlines.
-- **HMAC-Signed Dynamic QR Gate Passes**: Tamper-proof digital gate passes with offline cryptographic validation and direction tracking (IN/OUT).
-- **Role-Based Portals**: Unified portal with specialized views for Students, Wardens, Accounts, and Gate Security Guards.
+## What it does
+- **Score-based room allotment**: S = 0.30 seniority + 0.25 distance from home + 0.20 CGPA + 0.15 special need + 0.10 early application. Highest score is placed first.
+- **Roommate matching**: a 5-question lifestyle survey; compatibility is 1 minus the weighted distance between answers. A student is not placed with occupants below 0.6 compatibility.
+- **Fees**: invoices raised on allotment; payments are marked paid only from the gateway's HMAC-signed webhook (mock gateway in this prototype); late fine job.
+- **Complaints with SLA**: deadline per category (electrical 12 h, plumbing 24 h, ...); the SLA job runs every 15 minutes and escalates breached complaints.
+- **HMAC-signed QR gate pass**: approved leave issues a signed token; the guard's scanner rejects edited or reused passes.
+- **3D hall ID card**: landing page and `/id/` page with an interactive lanyard showing the student's name, roll number and room. The QR on its back is the student's gate pass when a leave is approved.
+- **Role-based portal** for students, wardens, accountant and security guard.
 
-## Technology Stack
-- **Runtime**: Node.js v22+ (Built-in `node:sqlite` DatabaseSync)
-- **Backend**: Express.js
-- **Frontend**: Vanilla HTML5, CSS3, JavaScript (Single Page Architecture)
-- **Cryptography**: Node.js `crypto` (HMAC SHA-256)
-- **QR Engine**: `qrcode`
-
-## Running Locally
-
+## Run locally
+Requires Node.js 22+.
 ```bash
 cd code
 npm install
-npm test
-npm start
+npm test        # 12 tests
+npm start       # http://localhost:3000
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+- `/` landing page, `/portal/` the portal, `/id/` your 3D ID card (after login)
+- Demo logins (password `pass123`): students `2301020456`, `2301020457`, `2301020459`; wardens `warden1`, `warden2`; accountant `accounts`; guard `guard1`
+- Delete `code/shmc.db` to reset demo data.
 
-### Demo Credentials (Password: `pass123`)
-- **Student**: `2301020457` (Suprit Kumar Naik)
-- **Student**: `2301020456` (Sk Mustakim Ali)
-- **Student**: `2301020459` (Sweta Samantaray)
-- **Warden (Aryabhatta)**: `warden1`
-- **Warden (Kalpana Chawla)**: `warden2`
-- **Accounts**: `accounts`
-- **Security Guard**: `guard1`
+## Editing the landing page
+The landing page (Next.js, React Three Fiber) is pre-built into `code/site/`, so the server needs no build step.
+To change it:
+```bash
+cd landing
+npm install
+npm run build   # builds and copies the output into code/site/
+```
+
+## Structure
+```
+code/      Express API (server.js), allotment engine, gate pass signing, SQLite schema, portal (public/), built landing (site/)
+landing/   Source of the landing page and 3D ID card (based on the v0 IRL event landing template)
+api/       Vercel entry point
+```
+Deploy on Render with `render.yaml`. On Vercel the SQLite database lives in /tmp and is not shared between instances, so use Render for demos.
