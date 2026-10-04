@@ -1,6 +1,6 @@
 // Students Hall Management Center - API server
 const express = require('express'), crypto = require('crypto'), QR = require('qrcode'), path = require('node:path');
-const db = require('./db'), { rank, allot } = require('./engine'), { sign, verify, checkPw } = require('./gate');
+const db = require('./db'), { rank, allot } = require('./engine'), { sign, verify, checkPw, hash } = require('./gate');
 
 const KEY = process.env.SESSION_KEY || 'shmc-session-key', PASS_KEY = process.env.PASS_KEY || 'shmc-gate-key-2026';
 const GW_KEY = process.env.GW_KEY || 'mock-razorpay-secret';
@@ -28,7 +28,6 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.json());
-
 const publicDir = path.join(__dirname, 'public');
 const siteDir = path.join(__dirname, 'site');
 
@@ -117,6 +116,24 @@ app.post('/api/allotment/publish', auth('warden'), (req, res) => {
     waitlist.forEach(w => run(`UPDATE application SET status='WAITLISTED' WHERE student_id=?`, w.student_id));
     db.exec('COMMIT'); res.json({ allotted: proposal.length, waitlisted: waitlist.length });
   } catch (e) { db.exec('ROLLBACK'); fail(res, 409, e.message); }
+});
+
+// --- student accounts (warden adds residents for their own hall) ---------
+const hallGender = u => one('SELECT gender FROM hall WHERE hall_id=?', u.hall_id).gender;
+app.get('/api/students', auth('warden'), (req, res) => res.json(all(`SELECT u.login, u.name, u.year, u.cgpa, u.home_km,
+  r.room_no, a.status app FROM user u LEFT JOIN allotment al ON al.student_id=u.user_id LEFT JOIN room r ON r.room_id=al.room_id
+  LEFT JOIN application a ON a.student_id=u.user_id WHERE u.role='student' AND u.gender=? ORDER BY u.user_id DESC`, hallGender(req.user))));
+
+app.post('/api/students', auth('warden'), (req, res) => {
+  const { login, name, year, cgpa, home_km, special_need, password = 'pass123' } = req.body;
+  if (!/^\d{10}$/.test(login || '')) return fail(res, 422, 'Roll number must be 10 digits');
+  if (!(name || '').trim()) return fail(res, 422, 'Name is required');
+  if (!(year >= 1 && year <= 4) || !(cgpa >= 0 && cgpa <= 10) || !(home_km >= 0)) return fail(res, 422, 'Year 1-4, CGPA 0-10, distance 0 or more');
+  if (String(password).length < 6) return fail(res, 422, 'Password must be at least 6 characters');
+  if (one('SELECT 1 FROM user WHERE login=?', login)) return fail(res, 409, `${login} already has an account`);
+  run(`INSERT INTO user(login,name,role,hash,gender,year,cgpa,home_km,special_need,survey) VALUES (?,?,'student',?,?,?,?,?,?,'[3,3,3,3,3]')`,
+    login, name.trim(), hash(String(password)), hallGender(req.user), +year, +cgpa, +home_km, special_need ? 1 : 0);
+  res.status(201).json({ ok: true, login, password });
 });
 
 // --- dashboard ------------------------------------------------------------

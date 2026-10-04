@@ -24,6 +24,19 @@ npm start       # http://localhost:3000
 - Demo logins (password `pass123`): students `2301020456`, `2301020457`, `2301020459`; wardens `warden1`, `warden2`; accountant `accounts`; guard `guard1`
 - Delete `code/shmc.db` to reset demo data.
 
+## Adding more students or staff
+**On the website:** log in as a warden (`warden1` or `warden2`) and open the **Students** tab. Fill in roll number, name, year, CGPA, distance from home and password, then click *Add student*. The student joins that warden's hall and can sign in at once.
+
+**From the command line** (for staff accounts or many students at once), without resetting the data:
+```bash
+cd code
+node add-student.js 2301020460 "Rohan Das" M 3 8.2 450              # password defaults to pass123
+node add-student.js 2301020461 "Ankita Sahu" F 1 9.0 800 mypass123  # custom password
+node add-student.js warden3 "Dr. A. Rath" M 0 0 0 pass123 warden    # staff: role = warden | accountant | guard
+```
+Arguments: roll/login, full name, gender (M/F, decides the hall), year, CGPA, distance from home in km, password, role.
+To make an account part of the demo data permanently, add a row to the `S` list in `db.js` and delete `shmc.db`.
+
 ## Editing the landing page
 The landing page (Next.js, React Three Fiber) is pre-built into `code/site/`, so the server needs no build step.
 To change it:

@@ -20,7 +20,7 @@ function logout() { localStorage.removeItem('shmc'); S = null; boot(); }
 
 const TABS = {
   student: { Home: home, 'Apply for room': apply, Fees: fees, Complaints: complaints, 'Leave & gate pass': leaves },
-  warden: { Dashboard: dashboard, Allotment: allotment, Complaints: complaints, 'Leave requests': leaves },
+  warden: { Dashboard: dashboard, Allotment: allotment, Students: students, Complaints: complaints, 'Leave requests': leaves },
   accountant: { Dues: fees, Dashboard: dashboard },
   guard: { 'Scan gate pass': scan, Visitors: visitors } };
 
@@ -171,6 +171,22 @@ async function allotment() {
     $('#pub').onclick = async () => { try { const r = await api('/allotment/publish', {}); await allotment();
       $('#prop').innerHTML = `<div class=card><p class=okmsg>Published: ${r.allotted} students allotted, ${r.waitlisted} waitlisted. Invoices raised.</p></div>`; } catch (e) { err(e); } };
   };
+}
+
+async function students() {
+  const list = await api('/students'), st = s => s.room_no ? `<span class="pill ALLOTTED">${s.room_no}</span>` : pill(s.app || 'NOT_APPLIED');
+  app.innerHTML = `<div class=card><h2>Add a student</h2><p class=muted>The student is added to your hall and can sign in straight away with this roll number and password.</p>
+    <div class=row><label>Roll number<input id=sl maxlength=10 placeholder="10 digits"></label><label style="flex:2">Full name<input id=sn></label>
+    <label>Year<select id=sy><option>1</option><option>2</option><option>3</option><option>4</option></select></label></div>
+    <div class=row><label>CGPA<input id=sc type=number step=0.01 min=0 max=10 value=8.0></label><label>Home distance (km)<input id=sk type=number min=0 value=300></label>
+    <label>Password<input id=sp value="pass123"></label><label style="flex:0 0 auto;margin-bottom:22px"><input id=sx type=checkbox style="width:auto"> Special need</label>
+    <button class=b id=go style="flex:0 0 auto;margin-bottom:10px">Add student</button></div><div id=msg></div></div>
+    <div class=card><h2>Students in your hall (${list.length})</h2><table><tr><th>Roll no.</th><th>Name</th><th>Year</th><th>CGPA</th><th>Home km</th><th>Status</th></tr>
+    ${list.map(s => `<tr><td>${s.login}</td><td>${s.name}</td><td>${s.year}</td><td>${s.cgpa}</td><td>${s.home_km}</td><td>${st(s)}</td></tr>`).join('')}</table></div>`;
+  $('#go').onclick = async () => { try {
+    const r = await api('/students', { login: $('#sl').value.trim(), name: $('#sn').value, year: +$('#sy').value, cgpa: +$('#sc').value,
+      home_km: +$('#sk').value, special_need: $('#sx').checked, password: $('#sp').value });
+    await students(); $('#msg').innerHTML = `<p class=okmsg>Added ${r.login}. They can sign in now with password ${r.password}.</p>`; } catch (e) { err(e); } };
 }
 
 // ---------------- guard ----------------

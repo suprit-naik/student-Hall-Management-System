@@ -50,7 +50,7 @@ test('complaint state machine allows only legal moves', () => {
   assert.deepEqual(FLOW.CLOSED, []);
 });
 
-test('API: login, role guard and allotment end to end', async () => {
+test('API: login, role guard, allotment, payment and adding a student end to end', async () => {
   const srv = app.listen(0), base = `http://localhost:${srv.address().port}/api`;
   const call = async (p, body, tok, method) => {
     const r = await fetch(base + p, { method: method || (body ? 'POST' : 'GET'),
@@ -71,6 +71,11 @@ test('API: login, role guard and allotment end to end', async () => {
     assert.equal(inv.length, 2);
     const o = (await call('/gateway/checkout', { invoice_id: inv[0].invoice_id }, s)).body;
     assert.ok((await call('/gateway/pay', { order_id: o.order_id }, s)).body.ok);
+    // warden adds a student from the website; the new account can log in at once
+    assert.equal((await call('/students', { login: '2301020999', name: 'New Student', year: 2, cgpa: 8, home_km: 300 }, s)).status, 403);
+    assert.equal((await call('/students', { login: '2301020999', name: 'New Student', year: 2, cgpa: 8, home_km: 300, password: 'secret12' }, w)).status, 201);
+    assert.equal((await call('/students', { login: '2301020999', name: 'Again', year: 2, cgpa: 8, home_km: 300 }, w)).status, 409);
+    assert.equal((await call('/login', { login: '2301020999', password: 'secret12' })).status, 200);
     const bad = await fetch(base + '/payments/webhook', { method: 'POST', headers: { 'x-signature': 'f'.repeat(64) },
       body: JSON.stringify({ invoice_id: inv[1].invoice_id, amount: 1, payment_id: 'x' }) });
     assert.equal(bad.status, 400);

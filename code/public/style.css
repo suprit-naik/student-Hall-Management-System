@@ -42,3 +42,4 @@ label{display:block;margin-bottom:12px;font-weight:500}label span{display:block;
 .qr{display:flex;gap:16px;align-items:center}.qr img{border-radius:8px;background:#fff;padding:6px}.qr code{word-break:break-all;font:11px var(--mono);color:var(--mut)}
 .idcard{display:flex;justify-content:space-between;align-items:center;gap:16px;background:linear-gradient(120deg,#151515,#0d0d0d)}
 input[type=range]{accent-color:var(--ink);padding:0;border:0}
+.NOT_APPLIED{color:var(--mut)}
